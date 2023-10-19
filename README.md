@@ -2,4 +2,4 @@
 
 Simulating stock market
 
-Inspiration: [https://www.youtube.com/watch?v=aEMBp9Bqfwc&ab_channel=HarkiratSingh](Zerodha Harkirat)
+Inspiration: [Zerodha Harkirat](https://www.youtube.com/watch?v=aEMBp9Bqfwc&ab_channel=HarkiratSingh)

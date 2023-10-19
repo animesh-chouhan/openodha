@@ -43,7 +43,6 @@ def get_user_by_username(db: Session, username: str):
 
 def user_login(db, username, password):
     db_user = db.query(models.User).filter(models.User.username == username).first()
-    print(type(db_user))
     if db_user:
         stored_password = db_user.password
         match db_user.pass_store_type:
