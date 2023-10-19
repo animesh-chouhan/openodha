@@ -1,0 +1,2 @@
+# openodha
+Simulating stock market
