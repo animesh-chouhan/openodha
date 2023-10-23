@@ -21,5 +21,10 @@ class UserLogin(UserBase):
 
 
 class User(UserBase):
-    userid: str
-    is_active: bool
+    user_id: str
+    is_authenticated: bool
+    api_key: str | None
+
+
+class APIToken(BaseModel):
+    api_token: str
