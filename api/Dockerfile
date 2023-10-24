@@ -8,5 +8,5 @@ RUN pip3 install -r requirements.txt
 COPY . .
 RUN chmod a+x start.sh
 
-EXPOSE 9001
+EXPOSE 9000
 CMD [ "./start.sh"]

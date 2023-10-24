@@ -26,8 +26,8 @@ class User(UserBase):
     api_key: str | None
 
 
-class APIToken(BaseModel):
-    api_token: str
+class APIKey(BaseModel):
+    api_key: str
 
 
 class UserLogout(BaseModel):

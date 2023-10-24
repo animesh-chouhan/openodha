@@ -5,22 +5,6 @@ import models, schemas, utils
 from session import get_session, delete_session
 
 
-def update_auth_status_login(db, db_user):
-    if not db_user.is_authenticated:
-        db_user.is_authenticated = True
-        db.commit()
-        db.refresh(db_user)
-    return db_user
-
-
-def update_auth_status_logout(db, db_user):
-    if db_user.is_authenticated:
-        db_user.is_authenticated = False
-        db.commit()
-        db.refresh(db_user)
-    return db_user
-
-
 def create_user(db: Session, user: schemas.UserCreate):
     user_id = str(uuid.uuid4())
     username = user.username
@@ -72,17 +56,14 @@ def user_login(db, username, password):
                 if utils.bcrypt_check_password(password, stored_password):
                     auth_status = True
         if auth_status:
-            db_user = update_auth_status_login(db, db_user)
             return db_user
-    else:
-        return None
+    return None
 
 
 def set_user_token(db, db_user, api_key):
-    if not db_user.is_authenticated:
-        db_user.api_key = api_key
-        db.commit()
-        db.refresh(db_user)
+    db_user.api_key = api_key
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 
@@ -90,7 +71,6 @@ def user_logout(db, user_id):
     db_user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if db_user:
         delete_session(user_id)
-        db_user = update_auth_status_logout(db, db_user)
         return db_user
     else:
         return None

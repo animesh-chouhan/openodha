@@ -7,7 +7,13 @@ from starlette_csrf import CSRFMiddleware
 
 import crud, models, schemas
 from database import SessionLocal, engine
-from session import UserSession, create_session, get_session, SESSION_DURATION
+from session import (
+    UserSession,
+    create_session,
+    get_session,
+    delete_session,
+    SESSION_DURATION,
+)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -62,7 +68,7 @@ def login(user: schemas.UserLogin, response: Response, db: Session = Depends(get
     return db_user
 
 
-@app.post("/api-key", response_model=schemas.APIToken)
+@app.post("/api-key", response_model=schemas.APIKey)
 def generate_api_key(request: Request, db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
     session_id = request.cookies.get("session_id")
@@ -72,10 +78,11 @@ def generate_api_key(request: Request, db: Session = Depends(get_db)):
         if db_user is None:
             raise HTTPException(status_code=404, detail="User not found")
         api_key = secrets.token_urlsafe(32)
-        db_user = 
+        db_user = crud.set_user_token(db, db_user, api_key)
         return db_user
 
-@app.get("/api-key", response_model=schemas.APIToken)
+
+@app.get("/api-key", response_model=schemas.APIKey)
 def get_api_key(request: Request, db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
     session_id = request.cookies.get("session_id")
@@ -84,9 +91,13 @@ def get_api_key(request: Request, db: Session = Depends(get_db)):
         db_user = crud.get_user_by_user_id(db, user_id=user_id)
         if db_user is None:
             raise HTTPException(status_code=404, detail="User not found")
-        api_key = secrets.token_urlsafe(32)
-        
-        return db_user
+        if db_user.api_key:
+            return db_user
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No API token found",
+        )
+
 
 @app.get("/users", response_model=list[schemas.User] | schemas.User)
 def read_users(
@@ -132,4 +143,5 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
         if db_user is None:
             return {"status": "User invalid/already logged out"}
         response.set_cookie(key="session_id", expires="Thu, 01 Jan 1970 00:00:01 GMT")
+        delete_session(user_id)
         return db_user

@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+source venv/bin/activate
+uvicorn main:app --port 9001 --reload
