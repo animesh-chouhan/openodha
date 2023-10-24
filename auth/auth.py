@@ -1,3 +1,3 @@
-import os
+import secrets
 
-secret_key = os.urandom(32)
+secret_key = secrets.token_hex(32)

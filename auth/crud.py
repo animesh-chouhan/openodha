@@ -50,7 +50,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
-def get_user(db: Session, user_id: str):
+def get_user_by_user_id(db: Session, user_id: str):
     return db.query(models.User).filter(models.User.user_id == user_id).first()
 
 
@@ -78,14 +78,19 @@ def user_login(db, username, password):
         return None
 
 
-def user_logout(db, user_id, session_id):
+def set_user_token(db, db_user, api_key):
+    if not db_user.is_authenticated:
+        db_user.api_key = api_key
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
+
+def user_logout(db, user_id):
     db_user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if db_user:
-        session = get_session(user_id)
-        if session:
-            delete_session(user_id)
-            db_user = update_auth_status_logout(db, db_user)
-            return db_user
-        return None
+        delete_session(user_id)
+        db_user = update_auth_status_logout(db, db_user)
+        return db_user
     else:
         return None

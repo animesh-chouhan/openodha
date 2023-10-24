@@ -28,3 +28,7 @@ class User(UserBase):
 
 class APIToken(BaseModel):
     api_token: str
+
+
+class UserLogout(BaseModel):
+    status: str
