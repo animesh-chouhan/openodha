@@ -9,21 +9,9 @@ def create_user(db: Session, user: schemas.UserCreate):
     user_id = str(uuid.uuid4())
     username = user.username
     password = user.password
-    pass_store_type = user.pass_store_type
+    stored_password = utils.bcrypt_hash_password(password)
 
-    match pass_store_type:
-        case "plaintext":
-            stored_password = password
-
-        case "bcrypt_hash":
-            stored_password = utils.bcrypt_hash_password(password)
-
-    db_user = models.User(
-        user_id=user_id,
-        username=username,
-        password=stored_password,
-        pass_store_type=pass_store_type,
-    )
+    db_user = models.User(user_id=user_id, username=username, password=stored_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -46,16 +34,7 @@ def user_login(db, username, password):
     db_user = db.query(models.User).filter(models.User.username == username).first()
     if db_user:
         stored_password = db_user.password
-        auth_status = False
-        match db_user.pass_store_type:
-            case "plaintext":
-                if stored_password == password:
-                    auth_status = True
-
-            case "bcrypt_hash":
-                if utils.bcrypt_check_password(password, stored_password):
-                    auth_status = True
-        if auth_status:
+        if utils.bcrypt_check_password(password, stored_password):
             return db_user
     return None
 

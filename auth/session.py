@@ -1,8 +1,25 @@
+import os
 import secrets
 import redis
 from pydantic import BaseModel
 
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+redis_host = os.environ.get("DOCKER_HOST", "localhost")
+password_location = os.environ.get("REDIS_PASSWORD_LOC")
+in_docker = os.environ.get("IN_DOCKER") == "True"
+
+if in_docker:
+    with open(password_location) as f:
+        redis_password = f.read()
+else:
+    redis_password = os.environ.get("REDIS_PASSWORD")
+
+r = redis.Redis(
+    host=redis_host,
+    port=6379,
+    decode_responses=True,
+    username="default",
+    password=redis_password,
+)
 
 SESSION_DURATION = 6 * 60 * 60
 

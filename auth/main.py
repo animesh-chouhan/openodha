@@ -1,8 +1,9 @@
+import os
 import secrets
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status, Cookie
 from sqlalchemy.orm import Session
-from starlette_csrf import CSRFMiddleware
 
+# from starlette_csrf import CSRFMiddleware
 # from fastapi.security import APIKeyQuery
 
 import crud, models, schemas
@@ -17,7 +18,23 @@ from session import (
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+if os.environ.get("APP_ENV") == "PROD":
+    root_path = "/auth"
+else:
+    root_path = ""
+
+
+app = FastAPI(
+    title="Openodha Auth",
+    summary="Authentication API for Openodha",
+    version="0.0.1",
+    license_info={
+        "name": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0",
+    },
+    root_path=root_path,
+    openapi_url="/openapi.json",
+)
 # app.add_middleware(CSRFMiddleware, secret=secrets.token_hex(32))
 # query_scheme = APIKeyQuery(name="api_key")
 
@@ -40,6 +57,11 @@ def get_user_session(user_id: str | None, session_id: str | None) -> UserSession
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Unauthorized session",
     )
+
+
+@app.get("/health", response_model=schemas.HealthCheck)
+def health():
+    return schemas.HealthCheck(status="OK")
 
 
 @app.post("/users", response_model=schemas.User)
@@ -99,10 +121,9 @@ def get_api_key(request: Request, db: Session = Depends(get_db)):
         )
 
 
-@app.get("/users", response_model=list[schemas.User] | schemas.User)
+@app.get("/users", response_model=list[schemas.User])
 def read_users(
     request: Request,
-    user_id: str | None = None,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
@@ -111,14 +132,8 @@ def read_users(
     session_id = request.cookies.get("session_id")
     session = get_user_session(user_id, session_id)
     if session:
-        if user_id == None:
-            users = crud.get_users(db, skip=skip, limit=limit)
-            return users
-        else:
-            db_user = crud.get_user_by_user_id(db, user_id=user_id)
-            if db_user is None:
-                raise HTTPException(status_code=404, detail="User not found")
-            return db_user
+        users = crud.get_users(db, skip=skip, limit=limit)
+        return users
 
 
 @app.get("/users/{username}", response_model=schemas.User)
@@ -133,7 +148,7 @@ def read_user(request: Request, username: str, db: Session = Depends(get_db)):
         return db_user
 
 
-@app.post("/logout", response_model=schemas.User | schemas.UserLogout)
+@app.post("/logout", response_model=schemas.UserLogout)
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
     session_id = request.cookies.get("session_id")
@@ -144,4 +159,4 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
             return {"status": "User invalid/already logged out"}
         response.set_cookie(key="session_id", expires="Thu, 01 Jan 1970 00:00:01 GMT")
         delete_session(user_id)
-        return db_user
+        return {"status": "User successfully logged out"}

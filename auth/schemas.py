@@ -2,9 +2,8 @@ from enum import Enum
 from pydantic import BaseModel
 
 
-class PassStoreTypes(str, Enum):
-    plaintext = "plaintext"
-    bcrypt_hash = "bcrypt_hash"
+class HealthCheck(BaseModel):
+    status: str = "OK"
 
 
 class UserBase(BaseModel):
@@ -13,7 +12,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    pass_store_type: PassStoreTypes
 
 
 class UserLogin(UserBase):
@@ -22,7 +20,6 @@ class UserLogin(UserBase):
 
 class User(UserBase):
     user_id: str
-    is_authenticated: bool
     api_key: str | None
 
 

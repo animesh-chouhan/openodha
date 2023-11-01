@@ -39,7 +39,7 @@ def place_order(api_key: str = Depends(query_scheme)):
 
 
 @app.get("/api/orders")
-def place_order(api_key: str = Depends(query_scheme)):
+def get_orders(api_key: str = Depends(query_scheme)):
     pass
 
 

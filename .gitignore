@@ -3,3 +3,4 @@
 *.pyc
 sql_commands
 sql_app.db
+docker/*passwd
